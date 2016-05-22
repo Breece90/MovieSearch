@@ -3,39 +3,104 @@
 }
 
 <script type="text/javascript">
-    function search() {
-        var textM = "";
-        if (document.getElementById("searchMovie") != null && $.trim(document.getElementById("searchMovie").value)) {
-            document.getElementById("result").innerHTML = "";
-            searchAjax({ s: $.trim(document.getElementById("searchMovie").value) }).done(function (data) {
-                searchDetails(data);
+    $(function() {
+        var availableTags = [
+          "ActionScript",
+          "AppleScript",
+          "Asp",
+          "BASIC",
+          "C",
+          "C++",
+          "Clojure",
+          "COBOL",
+          "ColdFusion",
+          "Erlang",
+          "Fortran",
+          "Groovy",
+          "Haskell",
+          "Java",
+          "JavaScript",
+          "Lisp",
+          "Perl",
+          "PHP",
+          "Python",
+          "Ruby",
+          "Scala",
+          "Scheme"
+        ];
+        $("#searchMovie").autocomplete({
+            source: autoCompSearch2()
+        });
+    });
+
+    function autoCompSearch2() {
+        return [
+          "ActionScript",
+          "AppleScript",
+          "Asp",
+          "BASIC",
+          "C",
+          "C++",
+          "Clojure",
+          "COBOL",
+          "ColdFusion",
+          "Erlang",
+          "Fortran",
+          "Groovy",
+          "Haskell",
+          "Java",
+          "JavaScript",
+          "Lisp",
+          "Perl",
+          "PHP",
+          "Python",
+          "Ruby",
+          "Scala",
+          "Scheme"
+        ];
+    }
+
+    function autoCompSearch() {
+        if (document.getElementById("searchMovie") != null && $.trim(document.getElementById("searchMovie").value) != "") {
+            var checkAr = [];
+            searchGetAjax({ s: $.trim(document.getElementById("searchMovie").value)}).done(function (json) {
+                if (json.Response == "True") {
+                    var text = "";
+                    $.each(json.Search, function (id) {
+                        checkAr.push(json.Search[id].Title);
+                    });
+                }
+                return checkAr;
             });
         }
     }
 
-    function searchDetails(json) {
-        var checkAr = [];
-        var text = "";
-        var i;
-        $.each(json.Search, function (id) {
-            checkAr.push(
-                searchAjax({ i: json.Search[id].imdbID, tomatoes: true }).done(function (detail) {
-                text += detail.Title + "  IMDB Rating: " + detail.imdbRating + " Metascore: " + detail.Metascore + ", Rotten Tomato: " + detail.tomatoUserMeter + "<br>";
-            }));
-        });
-        $.when.apply(null, checkAr).done(function () {
-            document.getElementById("result").innerHTML = text;
-        });
+    function search() {
+        if (document.getElementById("searchMovie") != null && $.trim(document.getElementById("searchMovie").value) != "") {
+            document.getElementById("result").innerHTML = "";
+            getDetails({ s: $.trim(document.getElementById("searchMovie").value), page: 1 });
+            getDetails({ s: $.trim(document.getElementById("searchMovie").value), page: 2 });
+            getDetails({ s: $.trim(document.getElementById("searchMovie").value), page: 3 });
+        }
     }
 
-    function searchAjax(inp){
-        return $.ajax({
-            url: "http://www.omdbapi.com/",
-            method: "GET",
-            data: inp,
-            dataType: "JSON"
+    function getDetails(inp) {
+        searchGetAjax(inp).done(function (json) {
+            if (json.Response == "True") {
+                var text = "";
+                var checkAr = [];
+                $.each(json.Search, function (id) {
+                    checkAr.push(searchGetAjax({ i: json.Search[id].imdbID, tomatoes: true }).done(function (detail) {
+                        document.getElementById("result").innerHTML += detail.Title + "  IMDB Rating: " + detail.imdbRating + " Metascore: " + detail.Metascore + ", Rotten Tomato: " + detail.tomatoUserMeter + "<br>";
+                    }));
+                });
+            }
         });
     }
+    function searchGetAjax(inp){
+        return $.getJSON("http://www.omdbapi.com/", inp);
+    }
+
 </script>
 <div>
     <input id="searchMovie" type="search" />
